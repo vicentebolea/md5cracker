@@ -81,6 +81,7 @@ class PasswordFuture implements Future<String> {
         /** COMPLETE **/
 
 
+      return "";
     }
     /*  ### isDone ###
      *  returns true if result is set
@@ -89,6 +90,7 @@ class PasswordFuture implements Future<String> {
     public boolean isDone() {
         /** COMPLETE **/
 
+      return true;
     }
 
 

@@ -27,6 +27,8 @@ public class PasswordCrackerTask implements Runnable {
     @Override
     public void run() {
         /** COMPLETE **/
+      long rangeBegin = 0;
+      long rangeEnd = 0;
 
 
 
@@ -42,6 +44,7 @@ public class PasswordCrackerTask implements Runnable {
         /** COMPLETE **/
 
 
+      return "";
     }
 
     /* ###	transformDecToBase36  ###
@@ -49,9 +52,24 @@ public class PasswordCrackerTask implements Runnable {
      * If you don't understand, refer to the homework01 overview
     */
     private static void transformDecToBase36(long numInDec, int[] numArrayInBase36) {
-        /** COMPLETE **/
+      long quotient = 0; 
+      int array_length = 0;
 
+      for (int i = 0; quotient > 0l; i++) {
+        int reminder = (int) (numInDec % 36l);
+        quotient = numInDec / 36l;
+        numArrayInBase36[i] = reminder;
+        array_length = i;
+      }
 
+      // Reverse the array
+      // If array_length is odd number we will get the floor
+      // of the float division which is what I intend in this case.
+      for (int j = 0; j < (array_length / 2); j++) {
+        int tmp = numArrayInBase36[j]; 
+        numArrayInBase36[j] = numArrayInBase36[array_length-j];
+        numArrayInBase36[array_length-j] = tmp;
+      }
     }
 
     /*
