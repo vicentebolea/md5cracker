@@ -26,14 +26,13 @@ public class PasswordCrackerTask implements Runnable {
      */
     @Override
     public void run() {
-        /** COMPLETE **/
-      long rangeBegin = 0;
-      long rangeEnd = 0;
+      long rangeBegin = taskId * consts.getPasswordSubRangeSize();
+      long rangeEnd = rangeBegin + consts.getPasswordSubRangeSize();
 
 
-
-        String passwordOrNull = findPasswordInRange(rangeBegin, rangeEnd, consts.getEncryptedPassword());
-
+      String passwordOrNull = findPasswordInRange(rangeBegin, rangeEnd, consts.getEncryptedPassword());
+      if (passwordOrNull != null)
+        passwordFuture.set(passwordOrNull);
     }
 
     /*	### findPasswordInRange	###
@@ -41,10 +40,30 @@ public class PasswordCrackerTask implements Runnable {
      * if a thread discovers the password, it returns original password string; otherwise, it returns null;
     */
     public String findPasswordInRange(long rangeBegin, long rangeEnd, String encryptedPassword) {
-        /** COMPLETE **/
+      char passwdFirstChar = encryptedPassword.charAt(0);
+      int[] arrayKey = new int[consts.getPasswordLength()];
 
+      long longKey = rangeBegin;
+      transformDecToBase36(longKey, arrayKey);
 
-      return "";
+      //System.out.println("TID: " + taskId + " " + rangeBegin + ":" + rangeEnd + " First key: " + transformIntToStr(arrayKey));
+
+      for (; longKey < rangeEnd; longKey++) {
+        if (!passwordFuture.isDone()) {
+          String rawKey = transformIntToStr(arrayKey);
+          String md5Key = encrypt(rawKey, getMessageDigest());
+
+          // Avoid full string comparison
+          if (md5Key.charAt(0) == passwdFirstChar) {
+            if (encryptedPassword.equals(md5Key)) {
+              return rawKey;
+            }
+          }
+          getNextCandidate(arrayKey);
+        }
+      }
+
+      return null; 
     }
 
     /* ###	transformDecToBase36  ###
@@ -52,23 +71,12 @@ public class PasswordCrackerTask implements Runnable {
      * If you don't understand, refer to the homework01 overview
     */
     private static void transformDecToBase36(long numInDec, int[] numArrayInBase36) {
-      long quotient = 0; 
-      int array_length = 0;
+      long quotient = numInDec; 
 
-      for (int i = 0; quotient > 0l; i++) {
-        int reminder = (int) (numInDec % 36l);
-        quotient = numInDec / 36l;
+      for (int i = 5; quotient > 0l; i--) {
+        int reminder = (int) (quotient % 36l);
+        quotient /= 36l;
         numArrayInBase36[i] = reminder;
-        array_length = i;
-      }
-
-      // Reverse the array
-      // If array_length is odd number we will get the floor
-      // of the float division which is what I intend in this case.
-      for (int j = 0; j < (array_length / 2); j++) {
-        int tmp = numArrayInBase36[j]; 
-        numArrayInBase36[j] = numArrayInBase36[array_length-j];
-        numArrayInBase36[array_length-j] = tmp;
       }
     }
 
@@ -76,9 +84,24 @@ public class PasswordCrackerTask implements Runnable {
      * The getNextCandidate update the possible password represented by 36 base system
     */
     private static void getNextCandidate(int[] candidateChars) {
-        /** COMPLETE **/
+      int i = candidateChars.length - 1;
 
+      while(i >= 0) {
+        candidateChars[i] += 1;
 
+        if (candidateChars[i] >= 36) {
+          candidateChars[i] = 0;
+          i--;
+
+        } else {
+          break;
+        }
+
+        //if (i == 1 ) {
+        //  String str = transformIntToStr(candidateChars);
+        //  System.out.println(str + " Major achievement TID:" + Thread.currentThread().getId());
+        //}
+      }
     }
 
     /*

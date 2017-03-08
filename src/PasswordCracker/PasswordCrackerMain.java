@@ -27,8 +27,7 @@ public class PasswordCrackerMain {
          * Create PasswordCrackerTask and use executor service to run in a separate thread
 		*/
         for (int i = 0; i < numThreads; i++) {
-            /** COMPLETE **/
-
+          workerPool.submit(new PasswordCrackerTask(i, isEarlyTermination, consts, passwordFuture));
         }
 
         try {
@@ -68,8 +67,10 @@ class PasswordFuture implements Future<String> {
      *  set the result and send signal to thread waiting for the result
      */
     public void set(String result) {
-        /** COMPLETE **/
-
+      lock.lock();
+      this.result = result;
+      resultSet.signal();
+      lock.unlock();
     }
 
     /*  ### get ###
@@ -78,19 +79,23 @@ class PasswordFuture implements Future<String> {
      */
     @Override
     public String get() throws InterruptedException, ExecutionException {
-        /** COMPLETE **/
+      lock.lock();
+      try {
+        if (!isDone()) {
+          resultSet.await();
+        }
+      } finally {
+        lock.unlock();
+      }
 
-
-      return "";
+      return result;
     }
     /*  ### isDone ###
      *  returns true if result is set
      */
     @Override
     public boolean isDone() {
-        /** COMPLETE **/
-
-      return true;
+      return (result != null);
     }
 
 
