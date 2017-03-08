@@ -1,0 +1,288 @@
+#######################################################
+# BDSA Lab
+#
+# Homework 01 - PasswordCracker using Multithread
+#######################################################
+
+This directory contains the files that you will use to build and run
+the PasswordCrackerInMultiThread. 
+
+The purpose of the Homework01 (PasswordCrackerMultiThread) is to give students 
+experience in dealing with Parallel Programming in Java.
+
+***********
+1. Overview
+***********
+
+In this assignment, you will implement PasswordCracker, a multi-threaded program that computes an original string (or password)
+from the hash of the string (or encrypted password). The program does it by trying all possible combinations of strings and test
+if the string is equivalent to the given hash value. 
+
+An original string, or password, is defined to be a sequence of numbers (0-9) or lower characters (a-z) of a constant length (by default 6, but can be other values). 
+For example, these are valid password: abcd01, 1294ab, 2j9sv9, 2nowbv, 123456
+These are not valid ones: a@1651, abcd (if the password length is 6).
+
+We assume that MD5 hash[1] is used for the encryption, although in practice MD5 is rarely used for password encryption for security issues.
+Here are some strings and their MD5 hashes.
+
++-------------------------------------------------+
+| Password |  MD5 Hash                            |
++----------+--------------------------------------+
+| "abcd01" |  "9fba06c18aa85fd4d0f41b15718d0e11"  |
+| "1294ab" |  "c4b9942f2886cd34fce932f279000ef3"  |
+| "2j9sv9" |  "331898db0886377b5e89fc2eaab40b00"  |
+| "2nowbv" |  "f92f8fa7fd6a5fa45d53227ffec0d6ac"  |
++----------+--------------------------------------+
+
+The program runs in a command line; a user runs the program passing an encrypted password as a parameter, such as 
+./PasswordCracker 9fba06c18aa85fd4d0f41b15718d0e11
+Then the program computes the original password and prints it on the screen; for the previous example, it prints 
+abcd01, because its MD5 hash is 9fba06c18aa85fd4d0f41b15718d0e11
+
+Because computing original password from its hash requires extensive computation, 
+"PasswordCracker" runs in parallel on multiple cores to compute the password.
+
+[1] MD5 Hash -- https://en.wikipedia.org/wiki/MD5 
+
+
+****
+2. Template Code
+****
+
+We provide template code to help students with the implementation.
+The provided code runs in the following way:
+
+1) PasswordCracker starts N number of threads, where N is a constant value in the program.
+2) It divides the computation into N equal size of tasks and assigns one task to a thread.
+   A task have a portion of the solution space[2] (or a set of possible password).
+3) Each thread enumerates over the password strings in its assigned task and check if the string has the same MD5 hash as the given one.
+
+In the template code, a password string can be represented in a long-type variable or int-type array (each character can be represented in int-type)
+For example, These are each character represented by int-type : 0 (0) , 1 (1), 2 (2) ... a (10), b (11), c (12), ... x (33), y (34), z (35) 
+
+Imagine that each possible character (numbers and lower-case alphabets) is a single digit number in base-36 number system since we have 36 possible characters.
+Then the entire password strings are 6 digit (by default 6, but can be other values) numbers in base-36 number system; then this number can be expressed as a long-type (decimal) value.
+
+Here are some example passwords and their corresponding numbers in base-36 system
+
++-------------------------------------------------+-----------------------------------+
+| Password  |  Password represented by base-36    |  Password represented by base-10  |
++-----------+-------------------------------------+-----------------------------------+
+|  abcd01   |        {10 11 12 13 0 1}            |             623714257             |
+|  1294ab   |        {1 2 9 4 10 11}              |              64250867             |
+|  00000b   |        {0 0 0 0 0 11}               |                 11                |
+|  000a1b   |        {0 0 0 10 1 11}              |                13007              |
++-----------+-------------------------------------+-----------------------------------+
+
+See the function transformIntoStr() in PasswordCrackerTask.java
+
+For example, if you want to convert a number-represented password to their string representation, you can code as following:
+
+    long passwdBase10 = 13007;
+    int[] passwdBase36 = new int[pwdStrLength];
+
+    transformDecToBase36(pwdBase10, pwdBase36);     // convert pwdBase10 (long) to pawdBase36 (int array)
+    String password = transfromIntoStr(pwdBase36);
+
+    for (int num : pwdBase36) {
+        System.out.print(num + " ");
+    }
+    
+    System.out.println();
+    System.out.println(password);
+
+
+The output for the above code is as following:
+   0 0 0 10 1 11 
+   000a1b        
+
+
+Hence if the given range of password value (the number-represented by base-10)  is from 0 to 10 then
+the assigned thread need to test the following candidate strings: 
+
+000000, 000001, 000002, 000003, 000004 000005, 000006, 000007, 000008, 000009, 00000A
+
+*********
+3. Given Files
+*********
+The following files are in PasswordCrackerMultiThread/src directory:
+
+PasswordCrackerConsts.java      - Source code for PasswordCracker's constant value
+PasswordCrackerMain.java        - Source code for main routine and ealry termination
+PasswordCrackerTask.java        - Source code for task 
+
+*********
+4. What you need to implement
+*********
+
+In the template code, you will find comments with COMPLETE (all in capital).
+You are required to implement the necessary code in those locations.
+
+Here we list all the functions you need to implement:
+
+ 1) PasswordCrackerMain class (in PasswordCrackerMain.java)
+  - 'for' statement area in main() 
+
+ 2) PasswordFuture class (in PasswordCrackerMain.java)
+  - set(String result).
+  - get().
+  - isDone().
+
+ 3) PasswordCrackerTask class (in PasswordCrackerMain.java)
+  - run().
+  - transformDecToBase36(long numInDec, int[] numArrayInBase36).
+  - findPasswordInRange(long rangeBegin, long rangeEnd, String encryptedPassword).
+  - getNextCandidate(int[] candidateChars).
+
+
+You also need to write a report for this assignment as well as implement code. Read Section 8
+
+********
+5. Building the PasswordCrackerMultiThread
+********
+
+Step 1: install apache-ant.
+
+refer to site :
+
+window : https://www.mkyong.com/ant/how-to-install-apache-ant-on-windows/k
+linux : http://howtoprogram.xyz/2016/10/14/install-apache-ant-ubuntu-16-04-lts-xenial-xerus/
+mac : https://www.mkyong.com/ant/how-to-apache-ant-on-mac-os-x/
+http://ant.apache.org/manual/install.html
+
+Check ant version after installation.
+
+ex)
+commain line> ant -v
+
+apache Ant(TM) version 1.9.6 compiled on July 8 2015
+Trying the default build file: build.xml
+Buildfile: build.xml does not exist!
+Build failed
+
+Step 2: Enter 'ant' in PasswordCrackerMultiThread directory
+
+ex)
+~/PasswordCrackerMultiThread> ant
+
+After doing steps, you can see the PasswordCrackerMain.jar in "{jar.dir}" that you set the configure in build.xml
+
+********
+6. Usage Examples
+********
+command line> java -jar PasswordCrackerMain.jar [numThreads] [passwordLength] [isEarlyTermination] [encryptedPassword]
+
+output form :
+
+STUDENT_ID
+numThreads
+passwordLength
+isEarlyTermination
+encrypted Password
+original Password
+
+ex1)
+command line> java -jar PasswordCrackerMain.jar 4 6 true c4b9942f2886cd34fce932f279000ef3
+output is
+
+20170000
+4
+6
+true
+c4b9942f2886cd34fce932f279000ef3
+1294ab
+
+ex2)
+command line> java -jar PasswordCrackerMain 2 6 true f92f8fa7fd6a5fa45d53227ffec0d6ac
+output is
+
+20170000
+2
+6
+true
+f92f8fa7fd6a5fa45d53227ffec0d6ac
+2nowbv 
+
+********
+7. Requirements 
+*********
+
+- You need to fill in blanks in the template code.
+  (you can see the 'COMPLETE' which marks the space that you must write the code in) 
+
+- The program must be implemented in multi-threaded. The number of threads is same as the number of cores in the machine. 
+
+- The program must support early termination.
+  ex) if one thread discovers the password, then all the threads immediately stop the computation. 
+
+- You must avoid poor naming and code design.
+
+- You must follow this output form :
+
+ex) refer to Section 6. Usage Examples
+
+STUDENT_ID
+numThreads
+passwordLength
+isEarlyTermination
+encrypted password
+original password
+
+- You must submit the files and report (.pdf) 
+
+- You must follow file(.tar.gz) and report (.pdf) this form: 
+
+assign#_studentNumber.tar, assign#_studentNumber.pdf
+
+and submit the two files (assign#_studentNumber.tar.gz, assign#_studentNumber.pdf)
+
+ex) Floder : PasswordCrackerMultiThread , Compression fileName : 1_201600000.tar.gz
+
+- You must use 'ant' because I will do the check for ant.
+
+*********
+8. Report
+*********
+
+You must submit the report for this assignment as well as your source code.
+The report must be in PDF format and include the following:
+
+0. You must experiment in multi-core machine with more than four cores.
+1. Fix the length of password be 6. Then run the program with different number of threads (from 1 to as many as the number of cores in your machine)
+   and plot the execution times in a graph. For this experiment, you need to turn off the early-termination.
+   Use the following command to measure the execution time:
+  ex) time java -jar PasswordCracker [thread-num] 6 false [encrypted-password]
+
+   Does the execution time decrease linearly? Why or why not? Discuss it.
+
+2. Repeat above experiment with the following password length: 2 and 4.
+
+   How does the execution time decrease compared to the above case? Discuss it.
+
+
+
+*********
+9. Submission
+*********
+You must submit the report (file format : pdf) 
+
+- Test PasswordCracker while increasing the thread ( 1, 2, 4 ..) and measure the execution time using unix time command
+
+- write the execution time (real time) 
+
+- Does the execution time increase linearly as the core grows? if not, Explain why the execution time does not increase linearly.
+
+( NOTE : In this experiment, turn off the early termination function. )
+
+
+*********
+10. Grade
+*********
+
+Report 20% (tentative)
+Code implementation and correct execution 80% (tentative)
+
+
+If you have any questions, Please send an email to bongki@unist.ac.kr
+
+
