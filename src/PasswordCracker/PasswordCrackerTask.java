@@ -46,10 +46,8 @@ public class PasswordCrackerTask implements Runnable {
       long longKey = rangeBegin;
       transformDecToBase36(longKey, arrayKey);
 
-      //System.out.println("TID: " + taskId + " " + rangeBegin + ":" + rangeEnd + " First key: " + transformIntToStr(arrayKey));
-
       for (; longKey < rangeEnd; longKey++) {
-        if (!passwordFuture.isDone()) {
+        if (!(passwordFuture.isDone() && isEarlyTermination)) {
           String rawKey = transformIntToStr(arrayKey);
           String md5Key = encrypt(rawKey, getMessageDigest());
 
@@ -96,11 +94,6 @@ public class PasswordCrackerTask implements Runnable {
         } else {
           break;
         }
-
-        //if (i == 1 ) {
-        //  String str = transformIntToStr(candidateChars);
-        //  System.out.println(str + " Major achievement TID:" + Thread.currentThread().getId());
-        //}
       }
     }
 
